@@ -9,7 +9,7 @@ El proyecto utiliza el dataset [Twitter Airline Sentiment](https://www.kaggle.co
 
 ## Entrega 1
 Se implementa y evalúa un modelo de **Perceptrón Multicapa (MLP)**.
-   ## Arquitectura del modelo
+   ### Arquitectura del modelo
    - Tipo: Perceptrón Multicapa (MLP)
    - Función de activación: 
    - Función de pérdida: 
