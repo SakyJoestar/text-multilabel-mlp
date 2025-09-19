@@ -1,17 +1,19 @@
-# Proyecto Redes Neuronales
+# 🧠 Clasificación de Sentimientos en Tweets de Aerolíneas
 
 ## Introducción
-(Objetivo del entregable, breve descripción del problema)
+Este proyecto busca analizar el desempeño de diferentes arquitecturas de redes neuronales vistas en el curso y seleccionar la más adecuada para resolver un problema de **clasificación de texto con múltiples etiquetas** usando el Framework **Pytorch**.  
 
 ## Dataset
-(Descripción del dataset elegido: tamaño, número de clases, distribución)
+El proyecto utiliza el dataset [Twitter Airline Sentiment](https://www.kaggle.com/datasets/crowdflower/twitter-airline-sentiment) de Kaggle.
 
-## Arquitectura del modelo
-- Tipo: Perceptrón Multicapa (MLP)
-- Framework: 
-- Función de activación: 
-- Función de pérdida: 
-- Optimizador: 
+
+## Entrega 1
+Se implementa y evalúa un modelo de **Perceptrón Multicapa (MLP)**.
+   ### Arquitectura del modelo
+   - Tipo: Perceptrón Multicapa (MLP)
+   - Función de activación: 
+   - Función de pérdida: 
+   - Optimizador: 
 
 <!-- ## Código
 (Incluir snippet del modelo en Keras)
@@ -23,8 +25,6 @@
 (Breve análisis de resultados y próximos pasos) -->
 
 ## 📥 Descarga del dataset
-
-El proyecto utiliza el dataset [Twitter Airline Sentiment](https://www.kaggle.com/datasets/crowdflower/twitter-airline-sentiment) de Kaggle.  
 
 Para descargarlo de forma automática, sigue estos pasos:
 
