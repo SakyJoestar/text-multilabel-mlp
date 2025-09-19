@@ -33,11 +33,24 @@ Para descargarlo de forma automática, sigue estos pasos:
    pip install kaggle
 
 2. **Configura tu token de Kaggle**
-    Ve a tu cuenta de Kaggle → Account → Create API Token.
-    Se descargará un archivo llamado kaggle.json.
-    Guárdalo en la ruta correspondiente según tu sistema operativo:
-    Linux/Mac: ~/.kaggle/kaggle.json
-    Windows: C:\Users\<tu_usuario>\.kaggle\kaggle.json
+
+   - Ve a tu cuenta de Kaggle → **Account** → **Create API Token**.  
+   - Se descargará un archivo llamado `kaggle.json`.  
+   - Guárdalo en la ruta correspondiente según tu sistema operativo:
+
+     - **Linux/Mac**  
+       ```bash
+       ~/.kaggle/kaggle.json
+       ```
+
+     - **Windows**  
+       ```bash
+       C:\Users\<tu_usuario>\.kaggle\kaggle.json
+       ```
 
 3. **Ejecuta el script de descarga**
-    python scripts/download_dataset.py
+
+   En la raíz del proyecto, corre el siguiente comando:
+
+   ```bash
+   python scripts/download_dataset.py
