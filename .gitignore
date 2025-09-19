@@ -1,0 +1,37 @@
+# =========================
+# Carpetas de datos
+# =========================
+data/
+.ipynb_checkpoints/
+
+# =========================
+# Entornos virtuales
+# =========================
+.venv/
+venv/
+
+# =========================
+# Cachés y compilados
+# =========================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# =========================
+# Modelos y checkpoints
+# =========================
+*.h5
+*.pt
+*.pkl
+
+# =========================
+# Configuración de editores
+# =========================
+.vscode/
+
+# =========================
+# Archivos de sistema
+# =========================
+.DS_Store
+Thumbs.db
