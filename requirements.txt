@@ -5,3 +5,5 @@ matplotlib
 jupyter
 kaggle
 torch
+seaborn
+joblib
