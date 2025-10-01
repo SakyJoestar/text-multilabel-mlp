@@ -13,6 +13,8 @@ import seaborn as sns
 import joblib
 import os
 
+os.makedirs("results", exist_ok=True)
+
 # --- 1. Carga y Preprocesamiento de Datos ---
 print("Cargando datos...")
 # El dataset corresponde al "Twitter US Airline Sentiment Dataset" 
@@ -86,7 +88,19 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
 print("Iniciando entrenamiento del Perceptrón Multicapa...")
+train_acc_history = []
+val_acc_history = []
+
+train_loss_history = []
+val_loss_history = []
+
+epoch_loss_history = []
 for epoch in range(EPOCHS):
+    model.train()
+
+    running_loss = 0.0
+    num_batches = 0
+
     for i in range(0, len(X_train_tensor), BATCH_SIZE):
         inputs = X_train_tensor[i:i+BATCH_SIZE]
         labels = y_train_tensor[i:i+BATCH_SIZE]
@@ -99,7 +113,37 @@ for epoch in range(EPOCHS):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
+        # acumular
+        running_loss += loss.item()
+        num_batches += 1
+
+    # promedio de loss de la epoch
+    avg_epoch_loss = running_loss / max(1, num_batches)
+    epoch_loss_history.append(avg_epoch_loss)
     
+    # Promedio de loss en entrenamiento (ya lo acumulas en running_loss)
+    avg_train_loss = running_loss / max(1, num_batches)
+    train_loss_history.append(avg_train_loss)
+
+      # --- Evaluación al final de la época ---
+    model.eval()
+    with torch.no_grad():
+        # Accuracy en train
+        train_outputs = model(X_train_tensor)
+        _, train_preds = torch.max(train_outputs, 1)
+        train_acc = accuracy_score(y_train, train_preds.numpy())
+
+        # Accuracy en test/validación
+        val_outputs = model(X_test_tensor)
+        _, val_preds = torch.max(val_outputs, 1)
+        val_acc = accuracy_score(y_test, val_preds.numpy())
+        val_loss = criterion(val_outputs, y_test_tensor).item()
+    
+    train_acc_history.append(train_acc)
+    val_acc_history.append(val_acc)
+    val_loss_history.append(val_loss)
+
     print(f'Epoch [{epoch+1}/{EPOCHS}], Loss: {loss.item():.4f}')
 
 # --- 5. Evaluación del Modelo ---
@@ -126,6 +170,46 @@ with open("results/metrics_report.txt", "w", encoding="utf-8") as f:
     f.write(f"Accuracy: {accuracy:.4f}\n\n")
     f.write("Reporte de Clasificación:\n")
     f.write(report)
+
+# Accuracy por época
+plt.figure(figsize=(8,5))
+plt.plot(range(1, EPOCHS+1), train_acc_history, label='Train Accuracy')
+plt.plot(range(1, EPOCHS+1), val_acc_history, label='Validation Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.title('Evolución de la Accuracy por Epoch')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('results/accuracy_curve.png')
+print("✅ Curva de accuracy guardada en 'results/accuracy_curve.png'")
+
+# Pérdida por época
+plt.figure(figsize=(8,5))
+plt.plot(range(1, EPOCHS+1), epoch_loss_history, label='Train Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss (CrossEntropy)')
+plt.title('Evolución del Loss por Epoch')
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('results/loss_curve.png')
+print("✅ Curva de loss guardada en 'results/loss_curve.png'")
+
+#Train vs Validation Loss
+plt.figure(figsize=(8,5))
+plt.plot(range(1, EPOCHS+1), train_loss_history, label='Train Loss')
+plt.plot(range(1, EPOCHS+1), val_loss_history, label='Validation Loss')
+plt.xlabel("Epoch")
+plt.ylabel("Loss (CrossEntropy)")
+plt.title("Evolución del Loss de Entrenamiento y Validación")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig("results/train_val_loss_curve.png")
+plt.show()
+
+print("✅ Curva de Train/Val Loss guardada en 'results/train_val_loss_curve.png'")
 
 # Matriz de Confusión
 cm = confusion_matrix(y_test, y_pred)
