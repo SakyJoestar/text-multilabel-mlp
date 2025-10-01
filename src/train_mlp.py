@@ -63,15 +63,17 @@ y_test_tensor = torch.tensor(y_test, dtype=torch.long)
 
 # --- 3. Definición del Modelo MLP en PyTorch ---
 class MLPClassifier(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim):
+    def __init__(self, input_dim, hidden_dim, output_dim, p_drop=0.3):
         super(MLPClassifier, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.relu = nn.ReLU()
+        self.drop = nn.Dropout(p_drop)
         self.fc2 = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
         out = self.fc1(x)
         out = self.relu(out)
+        x = self.drop(x)  
         out = self.fc2(out)
         return out
 
@@ -85,7 +87,7 @@ BATCH_SIZE = 64
 
 model = MLPClassifier(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-4)
 
 print("Iniciando entrenamiento del Perceptrón Multicapa...")
 train_acc_history = []
