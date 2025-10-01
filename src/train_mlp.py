@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
 import os
+import copy
+from torch.nn.utils import clip_grad_norm_
 
 os.makedirs("results", exist_ok=True)
 
@@ -66,14 +68,16 @@ class MLPClassifier(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim, p_drop=0.3):
         super(MLPClassifier, self).__init__()
         self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.bn1 = nn.BatchNorm1d(hidden_dim)
         self.relu = nn.ReLU()
         self.drop = nn.Dropout(p_drop)
         self.fc2 = nn.Linear(hidden_dim, output_dim)
 
     def forward(self, x):
         out = self.fc1(x)
+        out = self.bn1(out)
         out = self.relu(out)
-        x = self.drop(x)  
+        out = self.drop(out)
         out = self.fc2(out)
         return out
 
@@ -82,12 +86,16 @@ INPUT_DIM = X_train_tfidf.shape[1]
 HIDDEN_DIM = 128
 OUTPUT_DIM = len(sentiment_map)
 LEARNING_RATE = 0.001
-EPOCHS = 10
+EPOCHS = 30
 BATCH_SIZE = 64
+PATIENCE = 5
+MIN_DELTA = 1e-3
+DROPOUT_P = 0.5
+WEIGHT_DECAY = 5e-4
 
-model = MLPClassifier(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM)
+model = MLPClassifier(INPUT_DIM, HIDDEN_DIM, OUTPUT_DIM, p_drop=DROPOUT_P)
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-4)
+optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
 print("Iniciando entrenamiento del Perceptrón Multicapa...")
 train_acc_history = []
@@ -97,6 +105,11 @@ train_loss_history = []
 val_loss_history = []
 
 epoch_loss_history = []
+
+best_val_loss = float('inf')
+patience_counter = 0
+best_state_dict = None
+
 for epoch in range(EPOCHS):
     model.train()
 
@@ -114,6 +127,7 @@ for epoch in range(EPOCHS):
         # Backward and optimize
         optimizer.zero_grad()
         loss.backward()
+        clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
 
         # acumular
@@ -146,7 +160,22 @@ for epoch in range(EPOCHS):
     val_acc_history.append(val_acc)
     val_loss_history.append(val_loss)
 
-    print(f'Epoch [{epoch+1}/{EPOCHS}], Loss: {loss.item():.4f}')
+    print(f'Epoch [{epoch+1}/{EPOCHS}], Loss: {loss.item():.4f}, ValLoss: {val_loss:.4f}, ValAcc: {val_acc:.4f}')
+
+    # Early Stopping: guardar el mejor modelo y verificar paciencia
+    if val_loss + MIN_DELTA < best_val_loss:
+        best_val_loss = val_loss
+        best_state_dict = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        patience_counter = 0
+    else:
+        patience_counter += 1
+        if patience_counter >= PATIENCE:
+            print(f"Deteniendo temprano en epoch {epoch+1} por no mejorar val_loss durante {PATIENCE} épocas.")
+            break
+
+# Cargar el mejor estado del modelo si existe
+if best_state_dict is not None:
+    model.load_state_dict(best_state_dict)
 
 # --- 5. Evaluación del Modelo ---
 print("\nEvaluando modelo...")
@@ -175,8 +204,8 @@ with open("results/metrics_report.txt", "w", encoding="utf-8") as f:
 
 # Accuracy por época
 plt.figure(figsize=(8,5))
-plt.plot(range(1, EPOCHS+1), train_acc_history, label='Train Accuracy')
-plt.plot(range(1, EPOCHS+1), val_acc_history, label='Validation Accuracy')
+plt.plot(range(1, len(train_acc_history)+1), train_acc_history, label='Train Accuracy')
+plt.plot(range(1, len(val_acc_history)+1), val_acc_history, label='Validation Accuracy')
 plt.xlabel('Epoch')
 plt.ylabel('Accuracy')
 plt.title('Evolución de la Accuracy por Epoch')
@@ -188,7 +217,7 @@ print("✅ Curva de accuracy guardada en 'results/accuracy_curve.png'")
 
 # Pérdida por época
 plt.figure(figsize=(8,5))
-plt.plot(range(1, EPOCHS+1), epoch_loss_history, label='Train Loss')
+plt.plot(range(1, len(epoch_loss_history)+1), epoch_loss_history, label='Train Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss (CrossEntropy)')
 plt.title('Evolución del Loss por Epoch')
@@ -200,8 +229,8 @@ print("✅ Curva de loss guardada en 'results/loss_curve.png'")
 
 #Train vs Validation Loss
 plt.figure(figsize=(8,5))
-plt.plot(range(1, EPOCHS+1), train_loss_history, label='Train Loss')
-plt.plot(range(1, EPOCHS+1), val_loss_history, label='Validation Loss')
+plt.plot(range(1, len(train_loss_history)+1), train_loss_history, label='Train Loss')
+plt.plot(range(1, len(val_loss_history)+1), val_loss_history, label='Validation Loss')
 plt.xlabel("Epoch")
 plt.ylabel("Loss (CrossEntropy)")
 plt.title("Evolución del Loss de Entrenamiento y Validación")
