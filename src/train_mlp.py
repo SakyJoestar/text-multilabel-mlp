@@ -11,6 +11,7 @@ import torch.optim as optim
 import matplotlib.pyplot as plt
 import seaborn as sns
 import joblib
+import os
 
 # --- 1. Carga y Preprocesamiento de Datos ---
 print("Cargando datos...")
@@ -112,7 +113,19 @@ with torch.no_grad():
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Accuracy: {accuracy:.4f}")
 print("\nReporte de Clasificación:")
-print(classification_report(y_test, y_pred, target_names=sentiment_map.keys()))
+report = classification_report(y_test, y_pred, target_names=sentiment_map.keys())
+
+# Imprimir en consola
+print(f"Accuracy: {accuracy:.4f}")
+print("\nReporte de Clasificación:")
+print(report)
+
+# Guardar reporte en archivo .txt
+os.makedirs("results", exist_ok=True)  # crea carpeta si no existe
+with open("results/metrics_report.txt", "w", encoding="utf-8") as f:
+    f.write(f"Accuracy: {accuracy:.4f}\n\n")
+    f.write("Reporte de Clasificación:\n")
+    f.write(report)
 
 # Matriz de Confusión
 cm = confusion_matrix(y_test, y_pred)
